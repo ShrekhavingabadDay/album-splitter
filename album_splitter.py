@@ -17,13 +17,15 @@ def main():
 
     extension = original_track.split('.')[-1]
     
+    # if you do not know how to specify a template, you get a very helpful error
     if len(template) <= 1 or len(template) >= 4:
-        print('Error: Invalid template')
+        print('Error: Template length has to be within the range of 2-3')
         return
 
+    # assign an index to all the parameters in the template
     elif len(template) == 2:
         sindex = template.index('start')
-        nindex   = template.index('name')
+        nindex = template.index('name')
         if sindex == -1 or nindex == -1:
             print('Error: Invalid template')
             return
@@ -31,8 +33,8 @@ def main():
 
     else:
         sindex = template.index('start')
-        nindex   = template.index('name')
-        eindex    = template.index('end')
+        nindex = template.index('name')
+        eindex = template.index('end')
         if sindex == -1 or nindex == -1 or eindex == -1:
             print('Error: Invalid template')
             return
@@ -45,8 +47,10 @@ def main():
 
         if onlytwo:
 
+            # get length of original file
             length = subprocess.check_output('ffmpeg -i '+original_track+' 2>&1 | grep Duration | awk \'{print$2}\'', shell=True)[:-2]
 
+            # damn, this line is nasty!
             length = ':'.join((length.decode("ascii").split('.')[0]).split(':')[1:])
 
             starts = []
@@ -54,11 +58,12 @@ def main():
             names  = []
 
             for line in f:
+                
                 # skip comment and empty lines
                 if line.startswith('#') or len(line) <= 1:
                     continue
-
-                # create command string for a given track
+                
+                # extract data from file and store it in a way we like it
                 split_line = line.strip().split(' ')
                 start = split_line[sindex]
                 name  = split_line[nindex]
@@ -66,6 +71,8 @@ def main():
                 starts.append(start)
                 ends.append(start)
                 names.append(name)
+            
+            # we need the length of the file at the end of this array so we don't get f*cked by ffmpeg
             ends.append(length)
 
             for i,n in enumerate(names):
@@ -73,19 +80,24 @@ def main():
 
                 # use subprocess to execute the command in the shell
                 subprocess.call(command, shell=True)
-                # print(command)
+                
+                # print(command) => this is for debugging but I am gonna leave it in. Hope you don't mind <3
+                 
             return None
 
         for line in f:
+            
             # skip comment and empty lines
             if line.startswith('#') or len(line) <= 1:
                 continue
 
             # create command string for a given track
             split_line = line.strip().split()
+            
             start = split_line[sindex]
             name  = split_line[nindex]
             end   = split_line[eindex]
+            
             command = cmd_string.format(tr=original_track, st=start, en=end, nm=name)
 
             # use subprocess to execute the command in the shell
